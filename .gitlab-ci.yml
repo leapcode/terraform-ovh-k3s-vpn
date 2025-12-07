@@ -1,0 +1,12 @@
+image: registry.0xacab.org/leap/docker/opentofu:opentofu
+
+stages:
+  - validate
+
+validate:opentofu:
+  stage: validate
+  script: |
+    tofu init -input=false -backend=false
+    tofu fmt -check -diff || (echo "Run 'opentofu fmt' locally to fix formatting" && exit 1)
+    tofu validate || (echo "opentofu validate failed" && exit 1)
+
