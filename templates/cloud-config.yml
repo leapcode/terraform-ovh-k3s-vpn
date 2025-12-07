@@ -1,0 +1,87 @@
+#cloud-config
+
+__SSH_KEYS__
+
+write_files:
+  - path: /etc/cloud/cloud.cfg.d/50-curtin-networking.cfg
+    permissions: '0644'
+    content: |
+      network:
+        version: 2
+        ethernets:
+          ens4:
+            dhcp4: true
+            dhcp4-overrides:
+              route-metric: 100
+          ens3:
+            dhcp4: true
+            dhcp4-overrides:
+              route-metric: 300
+              use-routes: false
+  
+  - path: /usr/local/bin/setup-k3s.sh
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+
+      apt-get -yq update
+      apt-get install -yq \
+          ca-certificates \
+          curl \
+          ntpsec \
+          open-iscsi \
+          grep
+
+      PUBLIC_IP=$(curl -s https://api.ipify.org)
+      PRIVATE_IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
+
+      export K3S_TOKEN="__K3S_TOKEN__"
+      export K3S_IP="__K3S_IP__"
+
+      export INSTALL_K3S_EXEC="--node-ip $PRIVATE_IP \
+        --node-external-ip $PUBLIC_IP"
+
+      if [[ -z "$K3S_IP" ]]; then
+        echo "K3S_IP is empty, continuing as controller node"
+        export INSTALL_K3S_EXEC="$INSTALL_K3S_EXEC \
+        --disable=traefik"
+        if [ "__TOTAL_LEADERS__" -eq 1 ]; then
+          # single leader cluster
+          echo "Single leader cluster"
+        else
+          if [ "__LEADER_COUNT__" -eq 0 ]; then
+            # multimaster setup init leader
+            echo "Multi leader cluster. Setting up initial leader."
+            export INSTALL_K3S_EXEC="$INSTALL_K3S_EXEC \
+            --cluster-init"
+          else
+            # multimaster setup init followers
+            echo "Multi leader cluster. Setting up followers."
+            export INSTALL_K3S_EXEC="$INSTALL_K3S_EXEC \
+            --server __LEADER_IP__ "
+          fi
+        fi
+        export INSTALL_K3S_EXEC="$INSTALL_K3S_EXEC \
+        --bind-address $PRIVATE_IP \
+        --advertise-address $PRIVATE_IP"
+      else
+        export K3S_URL="https://$K3S_IP:6443"
+        echo "K3S_URL is set to: $K3S_URL, continuing as worker node"
+      fi
+
+      # flags for gateway
+      if [ "__GATEWAY_MODE_ENABLED__" = "true" ]; then
+      export INSTALL_K3S_EXEC="$INSTALL_K3S_EXEC \
+      --kubelet-arg=allowed-unsafe-sysctls=net.ipv4.ip_forward"
+      fi
+
+      # k3s installation
+      curl -sfL https://get.k3s.io | sh -s - \
+          --kubelet-arg 'cloud-provider=external'
+
+runcmd:
+  - cloud-init clean --configs network
+  - cloud-init init --local
+  - netplan apply 
+  - /usr/local/bin/setup-k3s.sh
+  - chmod o+r /etc/rancher/k3s/k3s.yaml
