@@ -17,7 +17,7 @@ variable "ovh_service_name" {
 }
 
 variable "ovh_region" {
-  type    = string
+  type = string
 }
 
 variable "k3s_leader_count" {
@@ -74,7 +74,7 @@ variable "gateway_mode_enabled" {
 variable "admin_ssh_key" {
   description = "Public SSH key to connect with all nodes"
   type = object({
-    name = string
+    name       = string
     public_key = string
   })
 }

@@ -70,7 +70,7 @@ output "controller_public_ip" {
   value = [
     for item in ovh_cloud_project_instance.k3s_controller[0].addresses : item.ip
     if item.version == 4 &&
-      !startswith(item.ip, "172.16.") &&
-      !strcontains(item.ip, ":")
+    !startswith(item.ip, "172.16.") &&
+    !strcontains(item.ip, ":")
   ]
 }
