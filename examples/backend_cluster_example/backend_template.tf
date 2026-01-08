@@ -49,6 +49,6 @@ module "k3s" {
 }
 
 # Don't change
-output "controller_public_ip" {
-  value = module.k3s.controller_public_ip[0]
+output "k3s_controller_ip" {
+  value = module.k3s.k3s_controller_ip[0]
 }
