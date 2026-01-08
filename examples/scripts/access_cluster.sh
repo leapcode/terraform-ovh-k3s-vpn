@@ -39,6 +39,9 @@ getAbsDir(){
 # Set default base dir to parent directory, assuming this script is in a /scripts directory
 BASE_DIR=$(getAbsDir "$(dirname "$0")/..")
 
+# Initialize variable
+PUBLIC_IP=""
+
 # Command line flag parsing
 FLAGS_START=0
 FLAGS_STOP=0
@@ -77,7 +80,7 @@ fi
 if [[ $FLAGS_START == 1 ]]; then
   # check return value of ls in order to determine if this is a valid terraform root directory
   if  ! ls -la $BASE_DIR/terraform.tfstate >/dev/null 2>&1; then
-    usage "Error: No terraform state file found in $BASE_DIR. Did you forget to add the path parameter to your terraform root directory?" 2
+    read -rp "No terraform state file found in $BASE_DIR. Please enter the public IP of your controller node: " PUBLIC_IP
   fi
 fi
 
@@ -88,8 +91,10 @@ REMOTE_FORWARD_PORT=6443
 # Port forwarding start / stop logic
 if [[ $FLAGS_START == 1 ]]; then
     cd $BASE_DIR
-    PUBLIC_IP=$(terraform output -raw controller_public_ip)
-    scp debian@$PUBLIC_IP:/etc/rancher/k3s/k3s.yaml ./k3s-remote.yaml
+    if [[ -z "$PUBLIC_IP" ]]; then
+      PUBLIC_IP=$(terraform output -raw k3s_controller_ip)
+    fi
+    scp -o ConnectTimeout=10 debian@"$PUBLIC_IP":/etc/rancher/k3s/k3s.yaml ./k3s-remote.yaml
     PRIVATE_IP=$(cat k3s-remote.yaml | grep server | cut -d ":" -f3 | sed -r 's/\/+//g')
 
     ssh -f -N -T -L $LOCAL_PORT:$PRIVATE_IP:$REMOTE_FORWARD_PORT $REMOTE_USER@$PUBLIC_IP $SSH_KEY_OPTION
