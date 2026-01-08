@@ -2,7 +2,7 @@
 
 # Use the existing k3s module from parent directory
 module "k3s" {
-  source       = "git::https://0xacab.org/leap/container-platform/terraform-k3s.git//ovh?ref=ovh_modularized"
+  source       = "git::https://0xacab.org/leap/container-platform/terraform-ovh-k3s-vpn.git?ref=no-masters"
   
   # OVH Project details
   ovh_service_name = "<id_of_your_ovh_public_cloud_project>"

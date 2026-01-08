@@ -3,7 +3,7 @@
 # Copy it to a new directory, outside of this repository.
 
 module "k3s" {
-  source = "git::https://0xacab.org/leap/container-platform/terraform-k3s.git//ovh?ref=no-masters"
+  source       = "git::https://0xacab.org/leap/container-platform/terraform-ovh-k3s-vpn.git?ref=no-masters"
 
   # OVH Project details
   ovh_service_name = "<id_of_your_ovh_public_cloud_project>"
