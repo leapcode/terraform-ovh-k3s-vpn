@@ -66,7 +66,7 @@ resource "random_password" "k3s_token" {
   special = false
 }
 
-output "controller_public_ip" {
+output "k3s_controller_ip" {
   value = [
     for item in ovh_cloud_project_instance.k3s_controller[0].addresses : item.ip
     if item.version == 4 &&
