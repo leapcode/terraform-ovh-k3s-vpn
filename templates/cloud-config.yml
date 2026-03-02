@@ -69,10 +69,13 @@ write_files:
         echo "K3S_URL is set to: $K3S_URL, continuing as worker node"
       fi
 
-      # flags for gateway
       if [ "__GATEWAY_MODE_ENABLED__" = "true" ]; then
-      export INSTALL_K3S_EXEC="$INSTALL_K3S_EXEC \
-      --kubelet-arg=allowed-unsafe-sysctls=net.ipv4.ip_forward"
+        #install and load ovpn-dco module Ref: https://github.com/OpenVPN/ovpn-dco
+        apt install -yq openvpn-dco-dkms dkms linux-headers-$(uname -r)
+        modprobe ovpn-dco-v2
+        # flags for gateway
+        export INSTALL_K3S_EXEC="$INSTALL_K3S_EXEC \
+        --kubelet-arg=allowed-unsafe-sysctls=net.ipv4.ip_forward"
       fi
 
       # k3s installation
