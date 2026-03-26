@@ -44,7 +44,7 @@ write_files:
       if [[ -z "$K3S_IP" ]]; then
         echo "K3S_IP is empty, continuing as controller node"
         export INSTALL_K3S_EXEC="$INSTALL_K3S_EXEC \
-        --disable=traefik"
+        --disable=traefik --secrets-encryption"
         if [ "__TOTAL_LEADERS__" -eq 1 ]; then
           # single leader cluster
           echo "Single leader cluster"
