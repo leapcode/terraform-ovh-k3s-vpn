@@ -1,4 +1,34 @@
-# Provision a single- or multi-node cluster on OVH
+# Overview
+
+A Terraform module to provision a minimal k3s Kubernetes cluster tailored to LEAP's VPN stack on OVH Cloud.
+
+## Features
+
+* Deploys a minimal k3s cluster
+* Uses OVH Public Cloud resources (servers, networks)
+* Automated provisioning via Terraform
+* Private networking between nodes
+* Easily extensible for more nodes or features
+
+## Backend cluster architecture
+
+We propose the following setup of services across worker nodes:
+
+**k3s controller node (reverse-proxy):**
+* Ingress : Traefik
+* cert-manager (https://cert-manager.io/) and other kube-master components
+
+**k3s worker node 1 (backend):**
+* menshen
+* invitectl to add invite codes to db menshen depends on 
+
+**k3s worker node 2: (monitoring, logs):**
+* [kube-prometheus-stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack) including
+* prometheus
+* grafana
+
+
+# Provisioning on OVH
 
 ## 1. Create a Public cloud project on OVH
 Register on OVH and create a Public Cloud project.
@@ -8,16 +38,18 @@ Please note: by default OVH enforces quite strict quota and often you are only a
 
 Whether you want to provision a single-node cluster to use it as a gateway or a multi-node cluster for backend services, it's easiest to start with the template files under **ovh/examples**. Here you find the code to import this repo as a git module and all the variables you need to provide. Just copy the template file to a directory you wish and adapt it.
 
-### a) Ensure git access
+### 2.1. Ensure git access
 Make sure you have access to the git repo and can git clone it, otherwise terraform init will fail.\
 Alternatively you can use the ssh-method to clone the repo during the init-process by replacing the source = ...  line by source = "git::ssh://git@0xacab.org/leap/container-platform/terraform-k3s.git//ovh?ref=no-masters"
 
-### b) Provide important variables
-Here is a list of the variables you'll need to provide:
+### 2.2. Provide important variables
+Here is a tabular overview on the configuration variables in the template file. When choosing a region and a server type it is important to first check if the server type is available in this region and if you have enough quota to provision the number of servers you plan to. It is easiest to achieve this by navigating to your public cloud project in the OVH console and pretending to want to create a server by clicking through the interface. Go to _Instances_ on the top of the left navigation bar and click "Create an instance". There you can see all current datacenter locations with their regional codes and server types available in them. You need to fill in the regional codes and instance names in the template file. Also take care that you don't exceed a quota. You can check the quotas and the regional codes of your public cloud project for each region in the OVH cloud dashboard under **Public Cloud / Settings / Quota & Regions**.
+
+Here is a list of the variables you ***must*** provide in the file:
 | Variable | Type | Description |
 | --------- | ---- | --------- |
 | *ovh_service_name* | string | the id of your public cloud project. You find it in the OVH console under your project name. | 
-| *ovh_region* | string | the OVH regional code for the region you want to provision resources in. Please mind your quota. |
+| *ovh_region* | string | the OVH regional code for the location you want to provision resources in. Please mind your quota. |
 | *admin_ssh_key* | object({ name = string, public_key = string }) | An object containing any chosen name as *name* and your public ssh-key as *public_key*. A ssh_key resource will be created and linked to all of your created instances.
 
 And these are variables you should use to configure your cluster:
@@ -57,23 +89,27 @@ export OVH_ENDPOINT=ovh-eu
 
 ## 4. Provision the resources
 
-### a) Initialize terraform
+### 4.1 Initialize terraform
 In the same shell and in the folder with your terraform project file, run 
 ```
 terraform init
 ``` 
+This initializes a working directory containing Terraform configuration files.
 
+### 4.2 Run
 When everything works out run 
 ```
 terraform plan
 ```
-Read the plan and make sure things are getting created as expected.
+This creates an execution plan, which lets you preview the changes that Terraform plans to make to your infrastructure.Read the plan and make sure things are getting created as expected.
 
+### 4.3 Apply
 Last run 
 ```
 terraform apply
 ```
-Your k3s cluster is now being provisioned. 🎊\
+This executes the actions proposed in the Terraform plan to create, update, or destroy infrastructure. Your k3s cluster is now being provisioned. 🎊
+
 You can check on the OVH dashboard if all of your resources are created as expected.
 
 ## 5. Accessing the cluster using port forwarding

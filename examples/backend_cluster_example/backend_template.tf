@@ -21,8 +21,7 @@ module "k3s" {
   gateway_mode_enabled = false # do not change
 
   # List of your worker nodes.
-  # Check terraform-k3s/ovh/vars.tf to see all available properties of
-  # the k3s_worker_nodes object
+  # Check vars.tf to see all available properties of the k3s_worker_nodes object
   k3s_worker_nodes = [
     {
       name        = "menshen"
