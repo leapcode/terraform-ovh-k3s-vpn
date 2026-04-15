@@ -14,18 +14,18 @@ A Terraform module to provision a minimal k3s Kubernetes cluster tailored to LEA
 
 We propose the following setup of services across worker nodes:
 
-**k3s controller node (reverse-proxy):**
+**k3s controller node (backend, reverse-proxy):**
 * Ingress : Traefik
 * cert-manager (https://cert-manager.io/) and other kube-master components
 
-**k3s worker node 1 (backend):**
+**k3s worker node 1 (menshen):**
 * menshen
 * invitectl to add invite codes to db menshen depends on 
 
-**k3s worker node 2: (monitoring, logs):**
+**k3s worker node 2: (monitoring):**
 * [kube-prometheus-stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack) including
-* prometheus
-* grafana
+* Prometheus
+* Grafana
 
 
 # Provisioning on OVH
