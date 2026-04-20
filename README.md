@@ -30,19 +30,20 @@ We propose the following setup of services across worker nodes:
 
 # Provisioning on OVH
 
-## 1. Create a Public cloud project on OVH
-Register on OVH and create a Public Cloud project.
+## 1. Creating a Public Cloud project on OVH
+
+Register on [OVH](https://www.ovhcloud.com) and create a Public Cloud project.
 Please note: by default OVH enforces quite strict quota and often you are only allowed to provision resources in the region you chose for your cloud project. You can check the quotas and the regional codes of your public cloud project for each region in the OVH cloud dashboard under **Public Cloud / Settings / Quota & Regions**.
 
-## 2. Configure your project
+## 2. Configuring your project
 
 Whether you want to provision a single-node cluster to use it as a gateway or a multi-node cluster for backend services, it's easiest to start with the template files under **ovh/examples**. Here you find the code to import this repo as a git module and all the variables you need to provide. Just copy the template file to a directory you wish and adapt it.
 
-### 2.1. Ensure git access
+### 2.1. Ensuring git access
 Make sure you have access to the git repo and can git clone it, otherwise terraform init will fail.\
 Alternatively you can use the ssh-method to clone the repo during the init-process by replacing the source = ...  line by source = "git::ssh://git@0xacab.org/leap/container-platform/terraform-k3s.git//ovh?ref=no-masters"
 
-### 2.2. Provide important variables
+### 2.2. Providing important variables
 Here is a tabular overview on the configuration variables in the template file. When choosing a region and a server type it is important to first check if the server type is available in this region and if you have enough quota to provision the number of servers you plan to. It is easiest to achieve this by navigating to your public cloud project in the OVH console and pretending to want to create a server by clicking through the interface. Go to _Instances_ on the top of the left navigation bar and click "Create an instance". There you can see all current datacenter locations with their regional codes and server types available in them. You need to fill in the regional codes and instance names in the template file. Also take care that you don't exceed a quota. You can check the quotas and the regional codes of your public cloud project for each region in the OVH cloud dashboard under **Public Cloud / Settings / Quota & Regions**.
 
 Here is a list of the variables you ***must*** provide in the file:
@@ -64,14 +65,14 @@ And these are variables you should use to configure your cluster:
 | *k3s_network_name* | string | Name for the network. Defaults to "k3s-leap". |
 | *k3s_worker_nodes* |list(object({ name = string, count = number, server_type = string, image_name = optional(string)  })) | A list of groups of worker nodes, each sharing a common operating system and server flavor. The variable *count* determines how many nodes of this kind you want to spin up. The *image_name* defaults to the value of *k3s_base_os*. In a single-node cluster like a gateway this variable should be [] as there is only one controller node and no worker nodes. Defaults to []. |
 
-## 3. Create OVH secrets
-Next step is to create the OVH application key, application secret and consumer key. All of these are neccessary so that your terraform code is allowed to make requests to the OVH API. You can create them here:
+## 3. Creating OVH secrets and providing them to Terraform
+Next step is to create the OVH Application Key, Application Secret and Consumer Key. All of these are neccessary so that your Terraform code is allowed to make requests to the OVH API. You can create them here:
 
 https://www.ovh.com/auth/api/createToken
 
-For 'Application name' and 'Application description' you can use whatever you like. For the sake of this tutorial it is easiest to manually add one line for each right (GET, PUT, POST, DELETE) and put * in the field to the right, thus granting your application universal rights. If you wish to have more control, you can play around here.
+For 'Application name' and 'Application description' you can use whatever you like. For the sake of this tutorial it is easiest to manually add one line for each right (GET, PUT, PATCH, POST, DELETE) and put * in the field to the right, thus granting your application universal rights. If you wish to have more control, you can play around here.
 
-Next we have to somehow give these secrets to terraform, so it can use them when making API calls to OVH. There are multiple ways to handle secret variables like these, but for now we will do it via environment variables following the scheme:\
+Next we have to somehow give these secrets to Terraform, so it can use them when making API calls to OVH. There are multiple ways to handle secret variables like these, but for now we will do it via environment variables following the scheme:\
 `export OVH_<variable_name>=<value>` .
 
 Open a shell and set all of the created secrets by typing the following commands:
@@ -87,23 +88,23 @@ Additionally you should set your endpoint to your specific region. For the EU yo
 export OVH_ENDPOINT=ovh-eu
 ```
 
-## 4. Provision the resources
+## 4. Provisioning the resources using Terraform
 
-### 4.1 Initialize terraform
-In the same shell and in the folder with your terraform project file, run 
+### 4.1 Initializing Terraform
+In the same shell and in the folder with your Terraform project file, run 
 ```
 terraform init
 ``` 
 This initializes a working directory containing Terraform configuration files.
 
-### 4.2 Run
+### 4.2 Planning
 When everything works out run 
 ```
 terraform plan
 ```
 This creates an execution plan, which lets you preview the changes that Terraform plans to make to your infrastructure.Read the plan and make sure things are getting created as expected.
 
-### 4.3 Apply
+### 4.3 Applying
 Last run 
 ```
 terraform apply
